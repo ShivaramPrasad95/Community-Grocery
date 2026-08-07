@@ -254,6 +254,7 @@ export default function AdminPage() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
               'x-internal-secret': process.env.NEXT_PUBLIC_INTERNAL_SECRET || '',
             },
             body: JSON.stringify({
