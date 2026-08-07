@@ -773,14 +773,28 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={broadcasting}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>{broadcasting ? 'Publishing...' : 'Publish Announcement'}</span>
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={broadcasting}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer text-sm"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{broadcasting ? 'Publishing...' : 'Publish Announcement'}</span>
+                  </button>
+                  {annTitle && (
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                        `${annKind === 'offer' ? '🏷️' : '🆕'} *${annTitle}*\n\n${annBody}\n\n🛒 Order on store: https://community-grocery.vercel.app`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer text-xs"
+                    >
+                      <span>📲 Share to WhatsApp</span>
+                    </a>
+                  )}
+                </div>
               </form>
             </div>
 
@@ -789,7 +803,7 @@ export default function AdminPage() {
               <h3 className="font-bold text-slate-800 text-lg">Broadcast History</h3>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {announcements.map((a) => (
-                  <div key={a.id} className="p-3 rounded-2xl border border-slate-100 bg-slate-50 space-y-1">
+                  <div key={a.id} className="p-3.5 rounded-2xl border border-slate-100 bg-slate-50 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-sm">{a.title}</span>
                       <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold uppercase">
@@ -797,6 +811,21 @@ export default function AdminPage() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-600">{a.body}</p>
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(a.created_at || Date.now()).toLocaleDateString()}
+                      </span>
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                          `${a.kind === 'offer' ? '🏷️' : '🆕'} *${a.title}*\n\n${a.body}\n\n🛒 Order on store: https://community-grocery.vercel.app`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                      >
+                        <span>📲 Share to WhatsApp Group</span>
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>

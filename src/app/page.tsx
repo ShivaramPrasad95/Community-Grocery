@@ -322,12 +322,24 @@ export default function StorefrontPage() {
             <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
               Your order has been received. The shopkeeper will call your mobile number to confirm delivery.
             </p>
-            <button
-              onClick={() => setPlacedOrderId(null)}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors cursor-pointer"
-            >
-              Continue Shopping
-            </button>
+            <div className="space-y-2">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  `🛒 *Community Grocery Order Placed!*\nOrder ID: #${placedOrderId.slice(0, 8)}\n\nHello, I placed an order on the Community Grocery web app! Please confirm delivery.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-sm"
+              >
+                <span>📱 Send Receipt on WhatsApp</span>
+              </a>
+              <button
+                onClick={() => setPlacedOrderId(null)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-xs"
+              >
+                Continue Shopping
+              </button>
+            </div>
           </div>
         </div>
       )}
