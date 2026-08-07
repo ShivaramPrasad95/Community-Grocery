@@ -37,3 +37,17 @@ export function formatWhatsAppNumber(rawPhone: string): string {
 
   return `whatsapp:+${clean}`;
 }
+
+/**
+ * Translates raw Twilio API error responses into clear, actionable messages.
+ */
+export function friendlyTwilioError(rawError: string): string {
+  if (!rawError) return 'Unknown error';
+  if (rawError.includes('ContentSid Required')) {
+    return 'Twilio Policy: ContentSid (Template) required for broadcasts outside 24h customer conversation window.';
+  }
+  if (rawError.includes('verified recipient') || rawError.includes('trial phone number')) {
+    return 'Twilio Trial restriction: Recipient must join WhatsApp Sandbox (+1 737 250-8034) first.';
+  }
+  return rawError;
+}

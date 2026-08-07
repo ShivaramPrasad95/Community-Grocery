@@ -3,7 +3,7 @@ import twilio from 'twilio';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateInternalRequest } from '@/lib/auth';
 
-import { formatWhatsAppNumber } from '@/lib/phone';
+import { formatWhatsAppNumber, friendlyTwilioError } from '@/lib/phone';
 
 export async function POST(req: NextRequest) {
   if (!validateInternalRequest(req)) {
@@ -65,7 +65,8 @@ export async function POST(req: NextRequest) {
           });
         } else {
           failed++;
-          const errMsg = r.reason?.message || 'Unknown error';
+          const rawErr = r.reason?.message || 'Unknown error';
+          const errMsg = friendlyTwilioError(rawErr);
           errors.push({ customer_id: c.id, error: errMsg });
           await supabase.from('broadcast_log').insert({
             announcement_id,
