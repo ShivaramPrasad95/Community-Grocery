@@ -3,6 +3,8 @@ import twilio from 'twilio';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateInternalRequest } from '@/lib/auth';
 
+import { formatWhatsAppNumber } from '@/lib/phone';
+
 export async function POST(req: NextRequest) {
   if (!validateInternalRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -43,8 +45,8 @@ export async function POST(req: NextRequest) {
       const batch = customers.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
         batch.map(async (c: any) => {
-          const phone = String(c.phone || '').replace(/\D/g, '');
-          const to = `whatsapp:+${phone.startsWith('91') ? phone : '91' + phone}`;
+          const to = formatWhatsAppNumber(c.phone);
+          if (!to) throw new Error('Invalid or missing phone number');
           const msg = await client.messages.create({ from, to, body });
           return { customer_id: c.id, phone: to, sid: msg.sid };
         })
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
           await supabase.from('broadcast_log').insert({
             announcement_id,
             customer_id: c.id,
-            phone: c.phone,
+            phone: c.phone || 'N/A',
             status: 'failed',
             error: errMsg,
           });
@@ -80,10 +82,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await supabase
-      .from('announcements')
-      .update({ whatsapp_sent: true })
-      .eq('id', announcement_id);
+    // Mark whatsapp_sent as true if at least 1 message sent or if customer list was empty
+    if (sent > 0 || customers.length === 0) {
+      await supabase
+        .from('announcements')
+        .update({ whatsapp_sent: true })
+        .eq('id', announcement_id);
+    }
 
     return NextResponse.json({ ok: true, sent, failed, errors });
   } catch (err: any) {

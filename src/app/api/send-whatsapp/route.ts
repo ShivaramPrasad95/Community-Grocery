@@ -3,15 +3,22 @@ import twilio from 'twilio';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateInternalRequest } from '@/lib/auth';
 
+import { formatWhatsAppNumber } from '@/lib/phone';
+
 export async function POST(req: NextRequest) {
   if (!validateInternalRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { to, body, kind, order_id } = await req.json();
-    if (!to || !body) {
+    const { to: rawTo, body, kind, order_id } = await req.json();
+    if (!rawTo || !body) {
       return NextResponse.json({ error: 'to and body required' }, { status: 400 });
+    }
+
+    const to = formatWhatsAppNumber(rawTo);
+    if (!to) {
+      return NextResponse.json({ error: 'Invalid destination phone number' }, { status: 400 });
     }
 
     const sid = process.env.TWILIO_ACCOUNT_SID;
