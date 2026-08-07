@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 30 npm run dev)",
+      "Bash(curl -s http://localhost:3000/api/admin/login -X POST -H \"Content-Type: application/json\" -d '{\"password\":\"admin123\"}')",
+      "Bash(curl -s -i http://localhost:3000/api/admin/login -X POST -H \"Content-Type: application/json\" -d '{\"password\":\"admin123\"}')",
+      "Bash(curl -s -i http://localhost:3000/api/admin/login -X POST -H \"Content-Type: application/json\" -d '{\"password\":\"wrongpass\"}')",
+      "Bash(curl -s -i -X GET http://localhost:3000/api/admin/items)",
+      "Bash(curl -s \"http://localhost:3000/api/admin/items\" -X POST -H \"Content-Type: application/json\" -d '{}')"
+    ]
+  }
+}

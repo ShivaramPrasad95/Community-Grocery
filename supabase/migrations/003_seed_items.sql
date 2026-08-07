@@ -1,0 +1,51 @@
+-- =====================================================================
+-- Community Grocery — Seed Mock Inventory Items
+-- =====================================================================
+
+insert into public.items (name, category, price, unit, stock, barcode, image_emoji, description, is_new_arrival, is_offer, offer_price)
+values
+  ('Amul Taaza Toned Milk (1L)', 'Dairy & Eggs', 54.00, 'packet', 45, '8901262010052', '🥛', 'Fresh pasteurized toned milk, rich in calcium and vitamins', false, false, null),
+  ('Amul Butter (500g)', 'Dairy & Eggs', 275.00, 'pack', 30, '8901262010014', '🧈', 'Pasteurized salted butter made from pure milk fat', false, true, 259.00),
+  ('Farm Fresh Organic Eggs (12 pcs)', 'Dairy & Eggs', 95.00, 'tray', 20, '8901262010099', '🥚', 'Nutritious brown farm-fresh eggs rich in omega-3', true, false, null),
+  ('Amul Malai Paneer (200g)', 'Dairy & Eggs', 90.00, 'pack', 15, '8901262010038', '🧀', 'Soft and creamy cottage cheese for delicious dishes', false, false, null),
+  ('Fresh Red Tomatoes (1kg)', 'Fresh Produce', 40.00, 'kg', 50, '890100000001', '🍅', 'Farm fresh juicy red tomatoes sourced daily', false, true, 32.00),
+  ('Fresh Potatoes (1kg)', 'Fresh Produce', 30.00, 'kg', 80, '890100000002', '🥔', 'Premium quality crunchy fresh potatoes', false, false, null),
+  ('Fresh Onions (1kg)', 'Fresh Produce', 35.00, 'kg', 65, '890100000003', '🧅', 'Crisp and flavorful red onions', false, false, null),
+  ('Robusta Bananas (1 Dozen)', 'Fresh Produce', 60.00, 'dozen', 25, '890100000004', '🍌', 'Naturally ripened sweet Robusta bananas', true, false, null),
+  ('Shimla Red Apples (1kg)', 'Fresh Produce', 180.00, 'kg', 18, '890100000005', '🍎', 'Crisp, sweet, and juicy handpicked Shimla apples', true, true, 159.00),
+  ('Fresh Alphonso Mangoes (1kg)', 'Fresh Produce', 350.00, 'kg', 12, '890100000006', '🥭', 'Aromatic and sweet Devgad Alphonso mangoes', true, false, null),
+  ('Modern Whole Wheat Bread (400g)', 'Bakery & Breakfast', 45.00, 'pack', 22, '8901262020013', '🍞', '100% whole wheat fiber-rich sandwich bread', false, false, null),
+  ('Britannia Maska Chaska (120g)', 'Bakery & Breakfast', 30.00, 'pack', 40, '8901063012011', '🍪', 'Butter and herb flavored savory biscuits', false, false, null),
+  ('Kellogg''s Corn Flakes (475g)', 'Bakery & Breakfast', 220.00, 'pack', 15, '8901088011013', '🥣', 'Crispy high-vitamin corn flakes breakfast cereal', false, true, 195.00),
+  ('Quaker Oats Instant Oats (1kg)', 'Bakery & Breakfast', 190.00, 'pack', 25, '8901491100015', '🌾', '100% natural wholegrain oats for healthy breakfast', false, false, null),
+  ('Maggi 2-Minute Masala Noodles (4-Pack)', 'Instant & Snacks', 56.00, 'pack', 100, '8901030865278', '🍜', 'India''s favorite delicious masala instant noodles', false, false, null),
+  ('Haldiram''s Nagpur Bhujia (400g)', 'Instant & Snacks', 110.00, 'pack', 35, '8904063200018', '🥨', 'Crispy and spicy traditional moth flour bhujia', false, true, 99.00),
+  ('Lays Spanish Tomato Tango Chips (50g)', 'Instant & Snacks', 20.00, 'pack', 60, '8901491001022', '🍟', 'Tangy tomato potato chips for snack time', false, false, null),
+  ('Act II Microwave Popcorn (33g)', 'Instant & Snacks', 35.00, 'pack', 45, '8906010110023', '🍿', 'Hot buttery movie-style popcorn ready in 3 mins', true, false, null),
+  ('Coca-Cola Original Taste (750ml)', 'Beverages', 40.00, 'bottle', 50, '8901764012014', '🥤', 'Refreshing carbonated soft drink served chilled', false, false, null),
+  ('Tropicana 100% Mixed Fruit Juice (1L)', 'Beverages', 145.00, 'pack', 20, '8901491200012', '🧃', 'No added sugar 100% natural mixed fruit juice', false, true, 129.00),
+  ('Tata Tea Premium (500g)', 'Beverages', 260.00, 'pack', 30, '8901052000013', '☕', 'Desh Ki Chai - rich aroma blended black tea leaves', false, false, null),
+  ('Nescafe Classic Instant Coffee (100g)', 'Beverages', 320.00, 'jar', 15, '8901058001014', '☕', '100% pure instant coffee with rich aroma', true, true, 289.00),
+  ('Red Bull Energy Drink (250ml)', 'Beverages', 125.00, 'can', 25, '9002490100017', '⚡', 'Vitalizes body and mind with energy', true, false, null),
+  ('Fortune Sunlite Sunflower Oil (1L)', 'Staples & Rice', 140.00, 'pouch', 40, '8906007280012', '🍾', 'Light and healthy refined sunflower cooking oil', false, true, 125.00),
+  ('India Gate Basmati Rice Feast Rozana (5kg)', 'Staples & Rice', 420.00, 'bag', 18, '8906001001019', '🍚', 'Long grain aromatic Basmati rice for daily meals', false, false, null),
+  ('Aashirvaad Shuddh Chakki Atta (5kg)', 'Staples & Rice', 245.00, 'bag', 25, '8901058852012', '🌾', '100% pure whole wheat flour with natural fiber', false, false, null),
+  ('Tata Salt Vacuum Evaporated (1kg)', 'Staples & Rice', 28.00, 'pack', 90, '8901052001010', '🧂', 'Purity guaranteed iodized cooking salt', false, false, null),
+  ('Madhur Pure & Hygienic Sugar (1kg)', 'Staples & Rice', 52.00, 'pack', 65, '8906002001018', '🍬', 'Refined sulfurless clean crystal sugar', false, false, null),
+  ('Surf Excel Easy Wash Detergent Powder (1kg)', 'Household & Care', 140.00, 'pack', 30, '8901030000013', '🧼', 'Superior stain removal detergent powder', false, true, 125.00),
+  ('Vim Dishwash Gel Lemon (500ml)', 'Household & Care', 120.00, 'bottle', 35, '8901030001027', '🧴', 'Degreasing dishwashing liquid with real lemon power', false, false, null),
+  ('Dettol Bathing Soap (125g x 3)', 'Household & Care', 165.00, 'pack', 28, '8901396000014', '🧼', 'Germ protection bathing bar for daily hygiene', false, false, null),
+  ('Colgate MaxFresh Peppermint Ice Paste (150g)', 'Household & Care', 115.00, 'pack', 40, '8901314010108', '🪥', 'Cooling crystals toothpaste for long-lasting fresh breath', false, true, 99.00),
+  ('Cadbury Dairy Milk Silk (150g)', 'Chocolates & Sweets', 175.00, 'pack', 30, '8901233020019', '🍫', 'Smooth and creamy melt-in-mouth milk chocolate', true, false, null),
+  ('Ferrero Rocher Chocolate Box (16 pcs)', 'Chocolates & Sweets', 549.00, 'box', 12, '8000500003014', '🍬', 'Whole crunchy hazelnut in delicious creamy filling', true, true, 499.00)
+on conflict (barcode) do update set
+  name = excluded.name,
+  category = excluded.category,
+  price = excluded.price,
+  unit = excluded.unit,
+  stock = excluded.stock,
+  image_emoji = excluded.image_emoji,
+  description = excluded.description,
+  is_new_arrival = excluded.is_new_arrival,
+  is_offer = excluded.is_offer,
+  offer_price = excluded.offer_price;
