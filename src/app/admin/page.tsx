@@ -97,8 +97,66 @@ export default function AdminPage() {
     }
   };
 
+// Play Order Notification Bell Sound via Web Audio API
+function playOrderBellSound() {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const playTone = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration);
+    };
+
+    // 2-step crystal chime bell sound (880Hz -> 1318.5Hz)
+    playTone(880, 0, 0.4);
+    playTone(1318.51, 0.18, 0.7);
+  } catch (err) {
+    console.warn('Audio chime notice:', err);
+  }
+}
+
+  const [newOrderNotice, setNewOrderNotice] = useState<string | null>(null);
+
   useEffect(() => {
+    if (!token) return;
     fetchAdminData();
+
+    // Supabase Realtime postgres listener on orders table for instant bell sound chime
+    const channel = supabase
+      .channel('admin-orders-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'orders' },
+        (payload) => {
+          playOrderBellSound();
+          const newOrd = payload.new;
+          const shortId = (newOrd.id || '').slice(0, 8);
+          setNewOrderNotice(`🔔 New Order Received! (#${shortId})`);
+          setTimeout(() => setNewOrderNotice(null), 8000);
+          fetchAdminData();
+        }
+      )
+      .subscribe();
+
+    // Fallback periodic refresh every 15s
+    const interval = setInterval(() => {
+      fetchAdminData();
+    }, 15000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, [token]);
 
   // Auth Submit
@@ -368,6 +426,14 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Realtime Order Arrival Bell Toast */}
+      {newOrderNotice && (
+        <div className="bg-emerald-600 text-white font-extrabold text-sm px-4 py-2.5 text-center flex items-center justify-center gap-2 shadow-lg animate-bounce sticky top-0 z-40">
+          <span className="text-base">🔔</span>
+          <span>{newOrderNotice}</span>
+        </div>
+      )}
+
       {/* Top Admin Header */}
       <header className="glass-header sticky top-0 z-30 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">

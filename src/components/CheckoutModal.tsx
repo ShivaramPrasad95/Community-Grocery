@@ -117,23 +117,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         items: items.map((ci) => ({ id: ci.item.id, qty: ci.quantity })),
       });
 
-      // 5. Trigger direct WhatsApp notification via Next.js API
+      // 5. Trigger Telegram Bot notification to shop owner
       try {
-        await fetch('/api/send-whatsapp', {
+        await fetch('/api/send-telegram', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-internal-secret': process.env.NEXT_PUBLIC_INTERNAL_SECRET || '',
-          },
-          body: JSON.stringify({
-            to: `whatsapp:+91${cleanPhone}`,
-            body: `🛒 *Community Grocery Order Placed!*\nOrder ID: #${orderData.id.slice(0, 8)}\nName: ${name}\nFlat: ${flat}\nTotal: ₹${total}\nSlot: ${deliveryTime}`,
-            kind: 'order',
-            order_id: orderData.id,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderData.id }),
         });
       } catch (err) {
-        console.warn('Direct WhatsApp notification skipped:', err);
+        console.warn('Telegram notification trigger notice:', err);
       }
 
       onOrderSuccess(orderData.id);
