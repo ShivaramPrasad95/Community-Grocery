@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
       .select('id')
       .single();
 
+    let annId = data?.id;
+
     if (error) {
       // Fallback via RPC if RLS blocks direct insert
       const { data: rpcId, error: rpcErr } = await supabase.rpc('publish_announcement', {
@@ -36,10 +38,39 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
-      return NextResponse.json({ ok: true, id: rpcId });
+      annId = rpcId;
     }
 
-    return NextResponse.json({ ok: true, id: data.id });
+    // Trigger server-side broadcast fan-out using process.env.INTERNAL_SECRET
+    if (annId) {
+      try {
+        const { data: customers } = await supabase.from('customers').select('id, name, phone');
+        if (customers && customers.length > 0) {
+          const kindEmoji = kind === 'offer' ? '🏷️' : '🆕';
+          const msgBody = `${kindEmoji} *${title}*\n\n${body}\n\n— Community Grocery`;
+          const internalSecret = process.env.INTERNAL_SECRET || '';
+          const host = req.headers.get('host') || 'community-grocery.vercel.app';
+          const protocol = host.includes('localhost') ? 'http' : 'https';
+
+          fetch(`${protocol}://${host}/api/broadcast`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-secret': internalSecret,
+            },
+            body: JSON.stringify({
+              announcement_id: annId,
+              body: msgBody,
+              customers,
+            }),
+          }).catch((bcErr) => console.error('Server broadcast dispatch error:', bcErr));
+        }
+      } catch (custErr) {
+        console.error('Customer fetch for broadcast failed:', custErr);
+      }
+    }
+
+    return NextResponse.json({ ok: true, id: annId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
