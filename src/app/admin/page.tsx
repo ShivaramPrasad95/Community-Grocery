@@ -67,9 +67,9 @@ export default function AdminPage() {
   }, []);
 
   // Fetch all admin data upfront when authenticated so top counters show instantly
-  const fetchAdminData = async () => {
+  const fetchAdminData = async (quiet = false) => {
     if (!token) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     try {
       const [itemsRes, ordersRes, custRes, annRes] = await Promise.all([
         supabase.from('items').select('*').order('name'),
@@ -93,7 +93,7 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   };
 
@@ -129,33 +129,30 @@ function playOrderBellSound() {
 
   useEffect(() => {
     if (!token) return;
-    fetchAdminData();
+    fetchAdminData(false);
 
-    // Supabase Realtime postgres listener on orders table for instant bell sound chime
+    // Supabase Realtime postgres listener on orders table for instant updates without page refresh
     const channel = supabase
       .channel('admin-orders-realtime')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders' },
+        { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
-          playOrderBellSound();
-          const newOrd = payload.new;
-          const shortId = (newOrd.id || '').slice(0, 8);
-          setNewOrderNotice(`🔔 New Order Received! (#${shortId})`);
-          setTimeout(() => setNewOrderNotice(null), 8000);
-          fetchAdminData();
+          if (payload.eventType === 'INSERT') {
+            playOrderBellSound();
+            const newOrd = payload.new;
+            const shortId = (newOrd.id || '').slice(0, 8);
+            setNewOrderNotice(`🔔 New Order Received! (#${shortId})`);
+            setTimeout(() => setNewOrderNotice(null), 8000);
+          }
+          // Quiet background update without reloading spinner!
+          fetchAdminData(true);
         }
       )
       .subscribe();
 
-    // Fallback periodic refresh every 15s
-    const interval = setInterval(() => {
-      fetchAdminData();
-    }, 15000);
-
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(interval);
     };
   }, [token]);
 
@@ -403,6 +400,18 @@ function playOrderBellSound() {
       (i.barcode && i.barcode.includes(searchStock))
   );
 
+  // Helper to check if an order requested ASAP / Urgent delivery
+  const isAsapOrder = (ord: Order) => {
+    const slot = (ord.delivery_time || ord.notes || '').toLowerCase();
+    return (
+      slot.includes('asap') ||
+      slot.includes('as soon as possible') ||
+      slot.includes('immediate') ||
+      slot.includes('express') ||
+      slot.includes('urgent')
+    );
+  };
+
   // Filter orders by Order ID, Customer Name, Flat, Phone, or Status
   const filteredOrders = orders.filter((ord) => {
     if (!searchOrders.trim()) return true;
@@ -413,6 +422,7 @@ function playOrderBellSound() {
     const custPhone = ord.customers?.phone?.toLowerCase() || '';
     const custFlat = ord.customers?.flat?.toLowerCase() || '';
     const status = ord.status.toLowerCase();
+    const slot = (ord.delivery_time || '').toLowerCase();
 
     return (
       shortId.includes(q) ||
@@ -420,8 +430,50 @@ function playOrderBellSound() {
       custName.includes(q) ||
       custPhone.includes(q) ||
       custFlat.includes(q) ||
-      status.includes(q)
+      status.includes(q) ||
+      slot.includes(q)
     );
+  });
+
+  // Priority Queue Sorting:
+  // 1. Active pending/confirmed orders at top
+  // 2. ASAP orders prioritized at the VERY TOP of active queue
+  // 3. Chronological FIFO order (oldest first) so shopkeepers can close one by one
+  // 4. Completed / cancelled orders placed at bottom
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    const aActive = a.status !== 'delivered' && a.status !== 'cancelled';
+    const bActive = b.status !== 'delivered' && b.status !== 'cancelled';
+
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
+
+    if (aActive && bActive) {
+      const aAsap = isAsapOrder(a);
+      const bAsap = isAsapOrder(b);
+
+      if (aAsap && !bAsap) return -1;
+      if (!aAsap && bAsap) return 1;
+
+      // Oldest first for active queue (FIFO)
+      const aTime = new Date(a.created_at || 0).getTime();
+      const bTime = new Date(b.created_at || 0).getTime();
+      return aTime - bTime;
+    }
+
+    // Newest first for completed/cancelled
+    const aTime = new Date(a.created_at || 0).getTime();
+    const bTime = new Date(b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+
+  // Calculate active order queue rank map
+  const queueMap = new Map<string, number>();
+  let activeCounter = 0;
+  sortedOrders.forEach((ord) => {
+    if (ord.status !== 'delivered' && ord.status !== 'cancelled') {
+      activeCounter++;
+      queueMap.set(ord.id, activeCounter);
+    }
   });
 
   return (
@@ -661,30 +713,58 @@ function playOrderBellSound() {
             </div>
 
             {loading ? (
-              <div className="py-12 text-center text-slate-400 animate-pulse">Loading orders...</div>
-            ) : filteredOrders.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 animate-pulse">Loading orders queue...</div>
+            ) : sortedOrders.length === 0 ? (
               <div className="py-12 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 p-6">
-                {searchOrders ? 'No orders match your search criteria.' : 'No customer orders received yet.'}
+                {searchOrders ? 'No orders match your search criteria.' : 'No customer orders in queue.'}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredOrders.map((ord) => {
+                {sortedOrders.map((ord) => {
+                  const isActive = ord.status !== 'delivered' && ord.status !== 'cancelled';
+                  const queuePosition = queueMap.get(ord.id) || null;
+                  const isAsap = isAsapOrder(ord);
+
                   const custName = ord.customers?.name || 'Customer';
                   const custFlat = ord.customers?.flat || 'N/A';
                   const custPhone = ord.customers?.phone || 'N/A';
                   const shortId = ord.id ? ord.id.slice(0, 8) : 'N/A';
 
                   return (
-                    <div key={ord.id} className="glass-card rounded-2xl p-5 border border-slate-200 space-y-3">
+                    <div
+                      key={ord.id}
+                      className={`glass-card rounded-2xl p-5 border transition-all space-y-3 relative ${
+                        isAsap && isActive
+                          ? 'border-red-300 ring-2 ring-red-400/40 bg-gradient-to-br from-red-50/40 to-amber-50/30'
+                          : isActive
+                          ? 'border-slate-200 bg-white'
+                          : 'border-slate-200 bg-slate-50/60 opacity-75'
+                      }`}
+                    >
+                      {/* Queue Header Badge */}
                       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
+                            {queuePosition && (
+                              <span
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                  isAsap
+                                    ? 'bg-red-600 text-white shadow-xs animate-pulse'
+                                    : 'bg-slate-800 text-white'
+                                }`}
+                              >
+                                {isAsap ? `🔥 ASAP PRIORITY (Queue #${queuePosition})` : `Queue #${queuePosition}`}
+                              </span>
+                            )}
                             <span className="font-bold text-slate-900 text-base">{custName}</span>
-                            <span className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md" title={`Full Order ID: ${ord.id}`}>
+                            <span
+                              className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md"
+                              title={`Full Order ID: ${ord.id}`}
+                            >
                               #{shortId}
                             </span>
                           </div>
-                          <div className="text-xs text-slate-500 mt-0.5">
+                          <div className="text-xs text-slate-500 mt-1">
                             Flat: <span className="font-semibold text-slate-700">{custFlat}</span> • Phone:{' '}
                             <span className="font-semibold text-slate-700">{custPhone}</span>
                           </div>
@@ -723,7 +803,10 @@ function playOrderBellSound() {
 
                       {ord.delivery_time && (
                         <div className="text-xs text-slate-500">
-                          Slot: <span className="font-semibold">{ord.delivery_time}</span>
+                          Slot:{' '}
+                          <span className={`font-semibold ${isAsap ? 'text-red-600 font-extrabold' : ''}`}>
+                            {ord.delivery_time}
+                          </span>
                         </div>
                       )}
 
