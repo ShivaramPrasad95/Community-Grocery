@@ -26,6 +26,8 @@ import {
   Sparkles,
   AlertCircle,
   ArrowLeft,
+  BarChart3,
+  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,8 +37,8 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('');
   const [authenticating, setAuthenticating] = useState(false);
 
-  // Active Tab: 'stock' | 'orders' | 'csv' | 'broadcast' | 'customers'
-  const [activeTab, setActiveTab] = useState<'stock' | 'orders' | 'csv' | 'broadcast' | 'customers'>('stock');
+  // Active Tab: 'overview' | 'stock' | 'orders' | 'csv' | 'broadcast' | 'customers'
+  const [activeTab, setActiveTab] = useState<'overview' | 'stock' | 'orders' | 'csv' | 'broadcast' | 'customers'>('overview');
 
   // Data states
   const [items, setItems] = useState<Item[]>([]);
@@ -535,6 +537,17 @@ function playOrderBellSound() {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
           <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'overview'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" /> Overview & KPIs
+          </button>
+
+          <button
             onClick={() => setActiveTab('stock')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'stock'
@@ -593,7 +606,201 @@ function playOrderBellSound() {
 
       {/* Main Tab Content */}
       <main className="max-w-6xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
-        {/* 1. STOCK TAB */}
+        {/* 1. OVERVIEW & ANALYTICS TAB */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Top KPI Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Sales KPI */}
+              <div className="glass-card rounded-3xl p-5 border border-slate-200/80 bg-gradient-to-br from-emerald-500/10 via-white to-white shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Sales</span>
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 font-bold text-lg">
+                    ₹
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-black text-slate-900">
+                    ₹{orders.filter((o) => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('en-IN')}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-emerald-600">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    <span>Total Store Sales Volume</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Orders KPI */}
+              <div className="glass-card rounded-3xl p-5 border border-slate-200/80 bg-gradient-to-br from-blue-500/10 via-white to-white shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Orders Received</span>
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                    <ShoppingBag className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-black text-slate-900">{orders.length} Orders</div>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] font-semibold text-slate-500">
+                    <span className="text-amber-600 font-bold">{orders.filter((o) => o.status === 'pending').length} Pending</span>
+                    <span>•</span>
+                    <span className="text-emerald-600 font-bold">{orders.filter((o) => o.status === 'delivered').length} Delivered</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Registered Customers KPI */}
+              <div className="glass-card rounded-3xl p-5 border border-slate-200/80 bg-gradient-to-br from-purple-500/10 via-white to-white shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Community Customers</span>
+                  <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+                    <Users className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-black text-slate-900">{customers.length} Shoppers</div>
+                  <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-purple-600">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>Registered Neighborhood Flats</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inventory Health KPI */}
+              <div className="glass-card rounded-3xl p-5 border border-slate-200/80 bg-gradient-to-br from-amber-500/10 via-white to-white shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Inventory Health</span>
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                    <Package className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="text-2xl font-black text-slate-900">{items.length} Products</div>
+                  <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-amber-600">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{items.filter((i) => (i.stock || 0) < 5).length} Items Low Stock (&lt;5)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions & Live Priority Orders Panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Quick Action Shortcuts */}
+              <div className="glass-card rounded-3xl p-6 border border-slate-200 space-y-4">
+                <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-emerald-600" />
+                  Quick Actions
+                </h3>
+                <div className="grid grid-cols-1 gap-2.5">
+                  <button
+                    onClick={() => {
+                      setEditingItem({ category: 'Fruits & Vegetables', unit: 'kg', price: 0, stock: 10, is_new_arrival: false, is_offer: false });
+                      setItemSaveError('');
+                      setIsItemModalOpen(true);
+                    }}
+                    className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-between transition-all shadow-md cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" /> Add Inventory Item
+                    </span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">+ Item</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('broadcast')}
+                    className="w-full py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-between transition-all shadow-md cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Megaphone className="w-4 h-4" /> Broadcast WhatsApp Offer
+                    </span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">📢 Alert</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('csv')}
+                    className="w-full py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center justify-between transition-all shadow-md cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Upload className="w-4 h-4" /> Bulk CSV Import
+                    </span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">📄 CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Priority Active Queue Overview */}
+              <div className="lg:col-span-2 glass-card rounded-3xl p-6 border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-emerald-600" />
+                    Priority Orders Queue ({orders.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length})
+                  </h3>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    View All Orders Queue &rarr;
+                  </button>
+                </div>
+
+                {orders.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+                    🎉 All customer orders fulfilled! Zero pending items in queue.
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {sortedOrders
+                      .filter((o) => o.status !== 'delivered' && o.status !== 'cancelled')
+                      .slice(0, 4)
+                      .map((ord) => {
+                        const isAsap = isAsapOrder(ord);
+                        const queuePos = queueMap.get(ord.id) || 1;
+                        return (
+                          <div
+                            key={ord.id}
+                            className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                              isAsap
+                                ? 'bg-red-50/60 border-red-200 ring-1 ring-red-300/40'
+                                : 'bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${
+                                  isAsap ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-800 text-white'
+                                }`}
+                              >
+                                {isAsap ? `🔥 ASAP #${queuePos}` : `#${queuePos}`}
+                              </span>
+                              <div>
+                                <div className="font-bold text-slate-900 text-xs">
+                                  {ord.customers?.name || 'Customer'} (Flat {ord.customers?.flat || 'N/A'})
+                                </div>
+                                <div className="text-[11px] text-slate-500 mt-0.5">
+                                  Order #{ord.id.slice(0, 8)} • Slot: <span className="font-semibold text-slate-700">{ord.delivery_time || 'Asap'}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-extrabold text-emerald-600 text-sm">₹{ord.total}</div>
+                              <button
+                                onClick={() => handleUpdateOrderStatus(ord.id, 'delivered')}
+                                className="mt-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer"
+                              >
+                                Mark Delivered
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. STOCK TAB */}
         {activeTab === 'stock' && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
