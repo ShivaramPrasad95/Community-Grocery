@@ -27,7 +27,20 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, category, price, unit, stock, barcode, image_url, image_emoji, description } = body || {};
+    const {
+      name,
+      category,
+      price,
+      unit,
+      stock,
+      barcode,
+      image_url,
+      image_emoji,
+      description,
+      is_new_arrival,
+      is_offer,
+      offer_price,
+    } = body || {};
 
     if (!name || !category || !unit || price == null || stock == null) {
       return NextResponse.json({ error: 'name, category, price, unit, stock required' }, { status: 400 });
@@ -46,6 +59,9 @@ export async function POST(req: NextRequest) {
         image_url: image_url || null,
         image_emoji: image_emoji || '📦',
         description: description || null,
+        is_new_arrival: !!is_new_arrival,
+        is_offer: !!is_offer,
+        offer_price: offer_price != null ? Number(offer_price) : null,
       })
       .select('id')
       .single();
@@ -64,6 +80,9 @@ export async function POST(req: NextRequest) {
             image_url: image_url || null,
             image_emoji: image_emoji || '📦',
             description: description || null,
+            is_new_arrival: !!is_new_arrival,
+            is_offer: !!is_offer,
+            offer_price: offer_price != null ? Number(offer_price) : null,
           },
         ],
       });

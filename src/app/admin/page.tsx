@@ -1060,13 +1060,40 @@ function playOrderBellSound() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 uppercase mb-1">Category</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingItem.category || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-xl text-sm"
-                  />
+                  <select
+                    value={
+                      ['Fruits & Vegetables', 'Dairy & Bakery', 'Staples & Grains', 'Snacks & Beverages', 'Household & Personal', 'General'].includes(editingItem.category || '')
+                        ? editingItem.category
+                        : 'Custom'
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val !== 'Custom') {
+                        setEditingItem({ ...editingItem, category: val });
+                      } else {
+                        setEditingItem({ ...editingItem, category: '' });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium"
+                  >
+                    <option value="Fruits & Vegetables">🍎 Fruits & Vegetables</option>
+                    <option value="Dairy & Bakery">🥛 Dairy & Bakery</option>
+                    <option value="Staples & Grains">🌾 Staples & Grains</option>
+                    <option value="Snacks & Beverages">🍿 Snacks & Beverages</option>
+                    <option value="Household & Personal">🧼 Household & Personal</option>
+                    <option value="General">📦 General</option>
+                    <option value="Custom">➕ Custom Category...</option>
+                  </select>
+                  {!['Fruits & Vegetables', 'Dairy & Bakery', 'Staples & Grains', 'Snacks & Beverages', 'Household & Personal', 'General'].includes(editingItem.category || '') && (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter custom category..."
+                      value={editingItem.category || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                      className="w-full px-3 py-1.5 border rounded-xl text-xs mt-1 bg-slate-50"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 uppercase mb-1">Unit (e.g. kg, pcs, pkt)</label>
