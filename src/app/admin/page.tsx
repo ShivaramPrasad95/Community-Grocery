@@ -131,22 +131,42 @@ function playOrderBellSound() {
     if (!token) return;
     fetchAdminData(false);
 
-    // Supabase Realtime postgres listener on orders table for instant updates without page refresh
+    // Pure Supabase Realtime listener on orders table - ZERO periodic timers or bulk refetches!
     const channel = supabase
       .channel('admin-orders-realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            playOrderBellSound();
-            const newOrd = payload.new;
-            const shortId = (newOrd.id || '').slice(0, 8);
-            setNewOrderNotice(`🔔 New Order Received! (#${shortId})`);
-            setTimeout(() => setNewOrderNotice(null), 8000);
+        { event: 'INSERT', schema: 'public', table: 'orders' },
+        async (payload) => {
+          playOrderBellSound();
+          const newOrd = payload.new as Order;
+          const shortId = (newOrd.id || '').slice(0, 8);
+          setNewOrderNotice(`🔔 New Order Received! (#${shortId})`);
+          setTimeout(() => setNewOrderNotice(null), 8000);
+
+          // Fetch only the single new order row with customer relation
+          const { data: fullOrder } = await supabase
+            .from('orders')
+            .select('*, customers(*)')
+            .eq('id', newOrd.id)
+            .maybeSingle();
+
+          if (fullOrder) {
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === fullOrder.id)) return prev;
+              return [fullOrder, ...prev];
+            });
           }
-          // Quiet background update without reloading spinner!
-          fetchAdminData(true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
+        (payload) => {
+          const updated = payload.new as Order;
+          setOrders((prev) =>
+            prev.map((o) => (o.id === updated.id ? { ...o, status: updated.status } : o))
+          );
         }
       )
       .subscribe();

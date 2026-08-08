@@ -58,7 +58,23 @@ export async function POST(req: NextRequest) {
     });
 
     const teleData = await teleRes.json();
-    return NextResponse.json({ ok: teleRes.ok, teleData });
+
+    if (!teleRes.ok || !teleData.ok) {
+      if (teleData.error_code === 403 && teleData.description?.includes("can't send messages to the bot")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "TELEGRAM_CHAT_ID is set to the Bot's ID instead of your Personal User Chat ID. Send a message to @userinfobot on Telegram to get your 9-digit Personal Chat ID.",
+            teleData,
+          },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ ok: false, error: teleData.description || 'Telegram API Error', teleData }, { status: 400 });
+    }
+
+    return NextResponse.json({ ok: true, teleData });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
