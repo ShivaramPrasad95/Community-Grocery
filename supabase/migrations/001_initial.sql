@@ -197,7 +197,7 @@ begin
   for r in select * from jsonb_array_elements(rows)
   loop
     insert into public.items (
-      name, category, price, unit, stock, barcode, image_url, image_emoji, description
+      name, category, price, unit, stock, barcode, image_url, image_emoji, description, is_new_arrival, is_offer, offer_price
     ) values (
       r->>'name',
       r->>'category',
@@ -207,7 +207,10 @@ begin
       nullif(r->>'barcode', ''),
       nullif(r->>'image_url', ''),
       coalesce(nullif(r->>'image_emoji', ''), '📦'),
-      nullif(r->>'description', '')
+      nullif(r->>'description', ''),
+      coalesce((r->>'is_new_arrival')::boolean, false),
+      coalesce((r->>'is_offer')::boolean, false),
+      nullif(r->>'offer_price', '')::numeric
     )
     on conflict (barcode) do update set
       name = excluded.name,
@@ -218,6 +221,9 @@ begin
       image_url = coalesce(excluded.image_url, public.items.image_url),
       image_emoji = excluded.image_emoji,
       description = excluded.description,
+      is_new_arrival = excluded.is_new_arrival,
+      is_offer = excluded.is_offer,
+      offer_price = excluded.offer_price,
       updated_at = now();
     inserted_count := inserted_count + 1;
   end loop;

@@ -99,10 +99,28 @@ export async function POST(req: NextRequest) {
         .limit(1)
         .maybeSingle();
 
-      return NextResponse.json({ ok: true, id: itemData?.id || 'upserted' });
+      const createdId = itemData?.id;
+      if (createdId) {
+        await supabase.from('items').update({
+          is_new_arrival: !!is_new_arrival,
+          is_offer: !!is_offer,
+          offer_price: offer_price != null ? Number(offer_price) : null,
+        }).eq('id', createdId);
+      }
+
+      return NextResponse.json({ ok: true, id: createdId || 'upserted' });
     }
 
-    return NextResponse.json({ ok: true, id: data.id });
+    const createdId = data.id;
+    if (createdId) {
+      await supabase.from('items').update({
+        is_new_arrival: !!is_new_arrival,
+        is_offer: !!is_offer,
+        offer_price: offer_price != null ? Number(offer_price) : null,
+      }).eq('id', createdId);
+    }
+
+    return NextResponse.json({ ok: true, id: createdId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
