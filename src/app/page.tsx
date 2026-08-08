@@ -83,9 +83,12 @@ export default function StorefrontPage() {
   // Filter items
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      const isNew = item.is_new_arrival === true || String(item.is_new_arrival) === 'true';
+      const isOffer = item.is_offer === true || String(item.is_offer) === 'true';
+
       // Mode filter
-      if (activeMode === 'new' && !item.is_new_arrival) return false;
-      if (activeMode === 'offer' && !item.is_offer) return false;
+      if (activeMode === 'new' && !isNew) return false;
+      if (activeMode === 'offer' && !isOffer) return false;
 
       // Category filter
       if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
@@ -183,7 +186,10 @@ export default function StorefrontPage() {
           {/* Filter Modes */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
-              onClick={() => setActiveMode('all')}
+              onClick={() => {
+                setActiveMode('all');
+                setSelectedCategory('All');
+              }}
               className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                 activeMode === 'all'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
@@ -193,7 +199,10 @@ export default function StorefrontPage() {
               All Items
             </button>
             <button
-              onClick={() => setActiveMode('new')}
+              onClick={() => {
+                setActiveMode('new');
+                setSelectedCategory('All');
+              }}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                 activeMode === 'new'
                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
@@ -203,7 +212,10 @@ export default function StorefrontPage() {
               <Sparkles className="w-4 h-4" /> New Arrivals
             </button>
             <button
-              onClick={() => setActiveMode('offer')}
+              onClick={() => {
+                setActiveMode('offer');
+                setSelectedCategory('All');
+              }}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                 activeMode === 'offer'
                   ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
